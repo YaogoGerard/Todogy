@@ -3,10 +3,12 @@ import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { connectDB } from './shared/database/mongodb.js'
 import authRoutes from './modules/auth/auth.routes.js'
+import todosRoutes from './modules/todos/todos.routes.js'
 
 const app = new Hono()
 app.get('/', (c) => c.text('Hello Hono!'))
 app.route('/auth', authRoutes)
+app.route('/todos',todosRoutes)
 
 
 connectDB(config.mongoUri);
