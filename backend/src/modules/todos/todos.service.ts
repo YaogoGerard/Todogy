@@ -19,7 +19,7 @@ export async function update(id: string, userId: string, data: { title?: string;
   const todo = await Todo.findOneAndUpdate(
     { _id: id, userId },
     { $set: data },
-    { new: true }
+    { returnDocument: 'after' }
   )
   if (!todo) throw new Error('Todo not found')
   return todo

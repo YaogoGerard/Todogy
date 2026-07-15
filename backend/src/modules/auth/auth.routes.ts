@@ -3,6 +3,7 @@ import { Login,Logout,register,githubLogin,googleLogin,github,google,refreshAcce
 import type { RegisterInput, LoginInput } from "./auth.model.js";
 import { getCookie } from "hono/cookie";
 import { generateState,generateCodeVerifier } from "arctic";
+import { config } from "../../config/constants.js";
 
 const authRoutes = new Hono();
 
@@ -53,7 +54,7 @@ authRoutes.get('/google/callback', async (c) => {
   const codeVerifier = getCookie(c, 'code_verifier')
   const result = await googleLogin(code!, codeVerifier!)
   c.header('Set-Cookie', `refreshToken=${result.refreshToken}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800`)
-  return c.json({ accessToken: result.accessToken, user: result.user })
+  return c.redirect(`${config.frontendUrl}?oauth=success`)
 })
 
 //Github
@@ -67,16 +68,20 @@ authRoutes.get('/github/callback', async (c) => {
   const code = c.req.query('code')
   const result = await githubLogin(code!)
   c.header('Set-Cookie', `refreshToken=${result.refreshToken}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800`)
-  return c.json({ accessToken: result.accessToken, user: result.user })
+  return c.redirect(`${config.frontendUrl}?oauth=success`)
 })
 
 authRoutes.post('/refresh', async (c) => {
   const refreshToken = getCookie(c, 'refreshToken')
   if (!refreshToken) return c.json({ error: 'No refresh token' }, 401)
 
-  const result = await refreshAccessToken(refreshToken)
-  c.header('Set-Cookie', `refreshToken=${result.refreshToken}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800`)
-  return c.json({ accessToken: result.accessToken, user: result.user })
+  try {
+    const result = await refreshAccessToken(refreshToken)
+    c.header('Set-Cookie', `refreshToken=${result.refreshToken}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800`)
+    return c.json({ accessToken: result.accessToken, user: result.user })
+  } catch {
+    return c.json({ error: 'Invalid refresh token' }, 401)
+  }
 })
 
 
