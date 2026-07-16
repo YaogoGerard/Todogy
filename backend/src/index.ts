@@ -9,7 +9,7 @@ import todosRoutes from './modules/todos/todos.routes.js'
 const app = new Hono()
 
 app.use(cors({
-  origin: config.frontendUrl,
+  origin: (origin) => origin,
   credentials: true,
 }))
 

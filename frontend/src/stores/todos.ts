@@ -42,18 +42,17 @@ export const useTodosStore = defineStore('todos', () => {
   const progress = computed(() => total.value ? done.value / total.value : 0)
 
   async function fetchTodos() {
-    const local = loadLocal()
     const token = localStorage.getItem('accessToken')
     if (!token) {
-      items.value = local
+      items.value = loadLocal()
       return
     }
     loading.value = true
     try {
       const { data } = await listTodos()
-      items.value = [...local, ...data]
+      items.value = data
     } catch {
-      items.value = local
+      items.value = []
     } finally {
       loading.value = false
     }
