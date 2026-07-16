@@ -66,8 +66,13 @@ authRoutes.post('/refresh', async (c) => {
     const refreshToken = getCookie(c, 'refreshToken');
     if (!refreshToken)
         return c.json({ error: 'No refresh token' }, 401);
-    const result = await refreshAccessToken(refreshToken);
-    c.header('Set-Cookie', `refreshToken=${result.refreshToken}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800`);
-    return c.json({ accessToken: result.accessToken, user: result.user });
+    try {
+        const result = await refreshAccessToken(refreshToken);
+        c.header('Set-Cookie', `refreshToken=${result.refreshToken}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800`);
+        return c.json({ accessToken: result.accessToken, user: result.user });
+    }
+    catch {
+        return c.json({ error: 'Invalid refresh token' }, 401);
+    }
 });
 export default authRoutes;

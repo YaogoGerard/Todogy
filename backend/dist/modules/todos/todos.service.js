@@ -13,7 +13,7 @@ export async function findById(id, userId) {
     return todo;
 }
 export async function update(id, userId, data) {
-    const todo = await Todo.findOneAndUpdate({ _id: id, userId }, { $set: data }, { new: true });
+    const todo = await Todo.findOneAndUpdate({ _id: id, userId }, { $set: data }, { returnDocument: 'after' });
     if (!todo)
         throw new Error('Todo not found');
     return todo;
