@@ -41,6 +41,22 @@ export const useTodosStore = defineStore('todos', () => {
   const done = computed(() => items.value.filter(t => t.completed).length)
   const progress = computed(() => total.value ? done.value / total.value : 0)
 
+  async function syncLocal() {
+    const local = loadLocal()
+    if (!local.length) return
+    const remaining = [...local]
+    for (const todo of local) {
+      try {
+        await createTodo(todo.title)
+        remaining.shift()
+        saveLocal(remaining)
+      } catch {
+        saveLocal(remaining)
+        return
+      }
+    }
+  }
+
   async function fetchTodos() {
     const local = loadLocal()
     const token = localStorage.getItem('accessToken')
@@ -49,9 +65,10 @@ export const useTodosStore = defineStore('todos', () => {
       return
     }
     loading.value = true
+    await syncLocal()
     try {
       const { data } = await listTodos()
-      items.value = [...local, ...data]
+      items.value = data
     } catch {
       items.value = local
     } finally {
