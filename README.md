@@ -37,7 +37,7 @@
 | Frontend | Vue 3, TypeScript, Vite, Pinia, Vue Router, Tailwind CSS v4 |
 | Backend | Hono, TypeScript, Mongoose, Arctic, bcryptjs |
 | Database | MongoDB Atlas |
-| CI/CD | Docker multi-stage, GitLab CI, Render |
+| CI/CD | Docker multi-stage, GitHub Actions, Render |
 
 ## Quick Start
 
@@ -47,13 +47,12 @@ cd Todogy
 
 # Backend
 cd backend
-cp .env.example .env      # fill in your env vars
+cp .env.example .env      # fill in your MongoDB & OAuth credentials
 npm install
 npm run dev                # → http://localhost:3000
 
 # Frontend (new terminal)
 cd frontend
-cp .env.example .env
 npm install
 npm run dev                # → http://localhost:5173
 ```
@@ -97,6 +96,10 @@ Vue 3 SPA ◄──HTTP/JSON──► Hono API ◄──Mongoose──► MongoD
                     ┌─────────┴─────────┐
                 Google OAuth        GitHub OAuth
 ```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to get started. PRs are welcome!
 
 ## License
 
