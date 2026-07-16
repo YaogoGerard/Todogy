@@ -25,13 +25,13 @@
 </template>
 
 <style scoped>
-/* Masque linéaire pour estomper le quadrillage à l'horizon */
+/* Linear mask to fade the grid at the horizon */
 .mask-linear-gradient {
   -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1), rgba(0,0,0,0));
   mask-image: linear-gradient(to top, rgba(0,0,0,1), rgba(0,0,0,0));
 }
 
-/* Animations fluides utilisant le GPU */
+/* GPU-accelerated floating animations */
 @keyframes driftA {
   0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
   50% { transform: translate3d(-24px, 26px, 0) rotate(8deg); }
@@ -51,7 +51,7 @@
 .animate-driftB { animation: driftB 11s ease-in-out infinite; }
 .animate-driftC { animation: driftC 17s ease-in-out infinite; }
 
-/* Respect des préférences d'accessibilité système */
+/* Respect system accessibility preferences */
 @media (prefers-reduced-motion: reduce) {
   .orb, .floor {
     animation: none !important;

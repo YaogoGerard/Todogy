@@ -50,22 +50,22 @@ onMounted(() => {
   <div class="pt-16">
   <div class="stage">
     <div class="card3d composer">
-      <input v-model="newTitle" type="text" placeholder="Ajouter une tâche…" maxlength="80" @keydown.enter="addTodo" />
-      <button class="add-btn" aria-label="Ajouter" @click="addTodo">+</button>
+      <input v-model="newTitle" type="text" placeholder="Add a task…" maxlength="80" @keydown.enter="addTodo" />
+      <button class="add-btn" aria-label="Add" @click="addTodo">+</button>
     </div>
 
     <div class="card3d filters">
-      <button :class="{ active: todosStore.filter === 'all' }" @click="todosStore.filter = 'all'">Toutes</button>
-      <button :class="{ active: todosStore.filter === 'active' }" @click="todosStore.filter = 'active'">En cours</button>
-      <button :class="{ active: todosStore.filter === 'done' }" @click="todosStore.filter = 'done'">Terminées</button>
+      <button :class="{ active: todosStore.filter === 'all' }" @click="todosStore.filter = 'all'">All</button>
+      <button :class="{ active: todosStore.filter === 'active' }" @click="todosStore.filter = 'active'">Active</button>
+      <button :class="{ active: todosStore.filter === 'done' }" @click="todosStore.filter = 'done'">Done</button>
     </div>
 
     <div v-if="todosStore.filteredItems.length === 0 && !todosStore.loading" class="card3d empty">
-      Rien ici. Ajoute une tâche pour commencer.
+      Nothing here. Add a task to get started.
     </div>
 
     <div v-else-if="todosStore.loading" class="card3d empty">
-      Chargement…
+      Loading…
     </div>
 
     <div v-else class="list">
@@ -83,7 +83,7 @@ onMounted(() => {
         <div class="item-body">
           <div class="item-title">{{ t.title }}</div>
         </div>
-        <button class="del" aria-label="Supprimer" @click="todosStore.remove(t._id)">
+        <button class="del" aria-label="Delete" @click="todosStore.remove(t._id)">
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path d="M1 1L11 11M11 1L1 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
           </svg>

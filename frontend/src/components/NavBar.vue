@@ -64,7 +64,7 @@ function handleLogout() {
             <img v-if="auth.user?.avatar" :src="auth.user.avatar" :alt="auth.user.name" class="avatar" />
             <div v-else class="avatar avatar-fallback">{{ auth.user?.name?.charAt(0).toUpperCase() }}</div>
           </div>
-          <button class="btn btn-outline" @click="handleLogout">Déconnexion</button>
+          <button class="btn btn-outline" @click="handleLogout">Logout</button>
         </template>
         <template v-else>
           <router-link to="/signin" class="btn btn-outline">Login</router-link>
