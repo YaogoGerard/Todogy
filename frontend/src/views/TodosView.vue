@@ -65,7 +65,7 @@ onMounted(() => {
     </div>
 
     <div v-else-if="todosStore.loading" class="card3d empty">
-      Loading…
+      <span class="spinner" style="width:28px;height:28px;border-width:3px"></span>
     </div>
 
     <div v-else class="list">

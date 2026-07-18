@@ -80,7 +80,10 @@ async function handleSubmit() {
         </div>
       </div>
 
-      <button type="submit" class="form-btn" :disabled="auth.loading">Create account</button>
+      <button type="submit" class="form-btn" :disabled="auth.loading">
+        <span v-if="auth.loading" class="spinner"></span>
+        <span v-else>Create account</span>
+      </button>
 
       <div class="form-link">
         Already have an account? <router-link to="/signin">Sign in</router-link>
