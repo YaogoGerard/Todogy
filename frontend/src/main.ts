@@ -17,7 +17,7 @@ async function boot() {
   app.mount('#app')
 
   const elapsed = Date.now() - start
-  const remaining = Math.max(0, 3000 - elapsed)
+  const remaining = Math.max(0, 5000 - elapsed)
 
   setTimeout(() => {
     const loader = document.getElementById('loader')
