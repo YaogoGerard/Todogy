@@ -7,7 +7,7 @@ import authRoutes from './modules/auth/auth.routes.js';
 import todosRoutes from './modules/todos/todos.routes.js';
 const app = new Hono();
 app.use(cors({
-    origin: config.frontendUrl,
+    origin: (origin) => origin,
     credentials: true,
 }));
 app.get('/', (c) => c.text('Hello Hono!'));

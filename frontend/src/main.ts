@@ -4,8 +4,6 @@ import './style.css'
 import App from './App.vue'
 import router from './router'
 import { useAuthStore } from './stores/auth'
-import { unlockAudio } from './lib/sound'
-
 async function boot() {
   const start = Date.now()
   const app = createApp(App)
@@ -18,7 +16,7 @@ async function boot() {
   app.mount('#app')
 
   const elapsed = Date.now() - start
-  const remaining = Math.max(0, 5000 - elapsed)
+  const remaining = Math.max(0, 3000 - elapsed)
 
   setTimeout(() => {
     const loader = document.getElementById('loader')
@@ -27,9 +25,6 @@ async function boot() {
       setTimeout(() => loader.remove(), 500)
     }
   }, remaining)
-
-  document.addEventListener('click', unlockAudio, { once: true })
-  document.addEventListener('touchstart', unlockAudio, { once: true })
 }
 
 boot()

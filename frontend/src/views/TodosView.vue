@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import NavBar from '../components/NavBar.vue'
 import { useTodosStore } from '../stores/todos'
-import { celebrateSound } from '../lib/sound'
-
 const todosStore = useTodosStore()
 const newTitle = ref('')
 
@@ -17,10 +15,6 @@ const confettiPieces = Array.from({ length: 60 }, (_, i) => ({
   size: 6 + Math.random() * 6,
   rotation: Math.random() * 360,
 }))
-
-watch(() => todosStore.progress, (p) => {
-  if (p === 1) celebrateSound()
-}, { flush: 'post' })
 
 function addTodo() {
   const val = newTitle.value.trim()
