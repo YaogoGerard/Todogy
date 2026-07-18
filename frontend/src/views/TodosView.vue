@@ -2,7 +2,7 @@
 import { ref, watch, onMounted } from 'vue'
 import NavBar from '../components/NavBar.vue'
 import { useTodosStore } from '../stores/todos'
-import { addTodoSound, toggleDoneSound, toggleUndoneSound, deleteTodoSound, celebrateSound } from '../lib/sound'
+import { celebrateSound } from '../lib/sound'
 
 const todosStore = useTodosStore()
 const newTitle = ref('')
@@ -22,23 +22,19 @@ watch(() => todosStore.progress, (p) => {
   if (p === 1) celebrateSound()
 }, { flush: 'post' })
 
-async function addTodo() {
+function addTodo() {
   const val = newTitle.value.trim()
   if (!val) return
   todosStore.addTodo(val)
   newTitle.value = ''
-  await addTodoSound()
 }
 
-async function handleToggle(id: string, completed: boolean) {
+function handleToggle(id: string, completed: boolean) {
   todosStore.toggleDone(id, completed)
-  if (completed) await toggleDoneSound()
-  else await toggleUndoneSound()
 }
 
-async function handleRemove(id: string) {
+function handleRemove(id: string) {
   todosStore.remove(id)
-  await deleteTodoSound()
 }
 
 onMounted(() => {
