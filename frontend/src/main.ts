@@ -6,6 +6,7 @@ import router from './router'
 import { useAuthStore } from './stores/auth'
 
 async function boot() {
+  const start = Date.now()
   const app = createApp(App)
   const pinia = createPinia()
   app.use(pinia).use(router)
@@ -15,11 +16,16 @@ async function boot() {
 
   app.mount('#app')
 
-  const loader = document.getElementById('loader')
-  if (loader) {
-    loader.classList.add('hide')
-    setTimeout(() => loader.remove(), 500)
-  }
+  const elapsed = Date.now() - start
+  const remaining = Math.max(0, 3000 - elapsed)
+
+  setTimeout(() => {
+    const loader = document.getElementById('loader')
+    if (loader) {
+      loader.classList.add('hide')
+      setTimeout(() => loader.remove(), 500)
+    }
+  }, remaining)
 }
 
 boot()
