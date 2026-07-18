@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { GOOGLE_AUTH_URL, GITHUB_AUTH_URL } from '../api/auth'
+import { successSound } from '../lib/sound'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -21,6 +22,7 @@ async function handleSubmit() {
   }
   try {
     await auth.register(name.value, email.value, password.value)
+    successSound()
     router.push('/')
   } catch {
     alert('Registration failed')

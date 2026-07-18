@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import NavBar from '../components/NavBar.vue'
 import { useTodosStore } from '../stores/todos'
+import { addTodoSound, toggleDoneSound, toggleUndoneSound, deleteTodoSound, celebrateSound } from '../lib/sound'
 
 const todosStore = useTodosStore()
 const newTitle = ref('')
@@ -17,11 +18,27 @@ const confettiPieces = Array.from({ length: 60 }, (_, i) => ({
   rotation: Math.random() * 360,
 }))
 
+watch(() => todosStore.progress, (p) => {
+  if (p === 1) celebrateSound()
+})
+
 function addTodo() {
   const val = newTitle.value.trim()
   if (!val) return
   todosStore.addTodo(val)
   newTitle.value = ''
+  addTodoSound()
+}
+
+function handleToggle(id: string, completed: boolean) {
+  todosStore.toggleDone(id, completed)
+  if (completed) toggleDoneSound()
+  else toggleUndoneSound()
+}
+
+function handleRemove(id: string) {
+  todosStore.remove(id)
+  deleteTodoSound()
 }
 
 onMounted(() => {
@@ -75,7 +92,7 @@ onMounted(() => {
         :class="['item card3d', { done: t.completed }]"
         :style="{ animationDelay: i * 0.05 + 's' }"
       >
-        <div class="check" @click="todosStore.toggleDone(t._id, !t.completed)">
+        <div class="check" @click="handleToggle(t._id, !t.completed)">
           <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
             <path d="M1 5L4.5 8.5L11 1.5" stroke="#0a0d1f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
@@ -83,7 +100,7 @@ onMounted(() => {
         <div class="item-body">
           <div class="item-title">{{ t.title }}</div>
         </div>
-        <button class="del" aria-label="Delete" @click="todosStore.remove(t._id)">
+        <button class="del" aria-label="Delete" @click="handleRemove(t._id)">
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path d="M1 1L11 11M11 1L1 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
           </svg>
