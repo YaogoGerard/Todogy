@@ -15,7 +15,7 @@ const showPassword = ref(false)
 async function handleSubmit() {
   try {
     await auth.login(email.value, password.value)
-    successSound()
+    await successSound()
     router.push('/')
   } catch {
     alert('Invalid email or password')

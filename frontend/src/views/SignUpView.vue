@@ -22,7 +22,7 @@ async function handleSubmit() {
   }
   try {
     await auth.register(name.value, email.value, password.value)
-    successSound()
+    await successSound()
     router.push('/')
   } catch {
     alert('Registration failed')

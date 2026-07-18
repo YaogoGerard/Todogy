@@ -20,25 +20,25 @@ const confettiPieces = Array.from({ length: 60 }, (_, i) => ({
 
 watch(() => todosStore.progress, (p) => {
   if (p === 1) celebrateSound()
-})
+}, { flush: 'post' })
 
-function addTodo() {
+async function addTodo() {
   const val = newTitle.value.trim()
   if (!val) return
   todosStore.addTodo(val)
   newTitle.value = ''
-  addTodoSound()
+  await addTodoSound()
 }
 
-function handleToggle(id: string, completed: boolean) {
+async function handleToggle(id: string, completed: boolean) {
   todosStore.toggleDone(id, completed)
-  if (completed) toggleDoneSound()
-  else toggleUndoneSound()
+  if (completed) await toggleDoneSound()
+  else await toggleUndoneSound()
 }
 
-function handleRemove(id: string) {
+async function handleRemove(id: string) {
   todosStore.remove(id)
-  deleteTodoSound()
+  await deleteTodoSound()
 }
 
 onMounted(() => {

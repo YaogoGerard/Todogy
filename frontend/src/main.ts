@@ -4,11 +4,10 @@ import './style.css'
 import App from './App.vue'
 import router from './router'
 import { useAuthStore } from './stores/auth'
-import { bootSound } from './lib/sound'
+import { unlockAudio } from './lib/sound'
 
 async function boot() {
   const start = Date.now()
-  bootSound()
   const app = createApp(App)
   const pinia = createPinia()
   app.use(pinia).use(router)
@@ -28,6 +27,9 @@ async function boot() {
       setTimeout(() => loader.remove(), 500)
     }
   }, remaining)
+
+  document.addEventListener('click', unlockAudio, { once: true })
+  document.addEventListener('touchstart', unlockAudio, { once: true })
 }
 
 boot()
