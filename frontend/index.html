@@ -5,8 +5,61 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Todogy</title>
+    <style>
+      #loader {
+        position: fixed; inset: 0; z-index: 9999;
+        background: #0a0d1f;
+        display: flex; align-items: center; justify-content: center;
+        transition: opacity .4s ease;
+      }
+      #loader.hide { opacity: 0; pointer-events: none; }
+      .loader-inner {
+        text-align: center;
+        animation: loaderFadeIn .6s ease both;
+      }
+      .loader-logo {
+        width: 72px; height: 72px;
+        background: linear-gradient(150deg, #6df0c2, #23c48c);
+        border-radius: 18px;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 20px;
+        box-shadow: 0 8px 0 #15803d, 0 16px 32px -8px rgba(74,222,128,0.5);
+      }
+      .loader-logo svg { width: 36px; height: 36px; }
+      .loader-brand {
+        font-size: 28px; font-weight: 800;
+        color: #f3f4fb; letter-spacing: -0.02em;
+        margin: 0 0 28px;
+      }
+      .loader-brand .g { color: #4ade80; }
+      .loader-spinner {
+        width: 28px; height: 28px; margin: 0 auto;
+        border: 3px solid rgba(255,255,255,0.08);
+        border-top-color: #4ade80;
+        border-radius: 50%;
+        animation: spin .7s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      @keyframes loaderFadeIn {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: none; }
+      }
+    </style>
   </head>
   <body>
+    <div id="loader">
+      <div class="loader-inner">
+        <div class="loader-logo">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M6 6h12M6 12h8M6 18h4" stroke="#052e16" stroke-width="2.8" stroke-linecap="round"/>
+            <circle cx="18" cy="18" r="4" fill="#052e16"/>
+            <path d="M16.5 18l1 1 2-2" stroke="#4ade80" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="loader-brand">T<span class="g">o</span>do<span class="g">g</span>y</div>
+        <div class="loader-spinner"></div>
+      </div>
+    </div>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

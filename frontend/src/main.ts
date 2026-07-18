@@ -14,6 +14,12 @@ async function boot() {
   await authStore.init()
 
   app.mount('#app')
+
+  const loader = document.getElementById('loader')
+  if (loader) {
+    loader.classList.add('hide')
+    setTimeout(() => loader.remove(), 500)
+  }
 }
 
 boot()
