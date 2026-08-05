@@ -13,6 +13,10 @@ async function boot() {
   const authStore = useAuthStore()
   await authStore.init()
 
+  if (new URLSearchParams(window.location.search).has('oauth')) {
+    router.replace({ query: {} })
+  }
+
   app.mount('#app')
 
   const elapsed = Date.now() - start

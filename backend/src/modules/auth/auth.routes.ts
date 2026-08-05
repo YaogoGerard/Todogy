@@ -53,14 +53,14 @@ authRoutes.get('/google', (c) => {
 })
 authRoutes.get('/google/callback', async (c) => {
   const error = c.req.query('error')
-  if (error) return c.redirect(`${config.frontendUrl}?oauth=error=${error}`)
+  if (error) return c.redirect(`${config.frontendUrl}/signin?oauth=error=${error}`)
 
   const code = c.req.query('code')
   const codeVerifier = getCookie(c, 'code_verifier')
   const expectedState = getCookie(c, 'oauth_state')
-  if (!code || !codeVerifier) return c.redirect(`${config.frontendUrl}?oauth=error=missing_code`)
+  if (!code || !codeVerifier) return c.redirect(`${config.frontendUrl}/signin?oauth=error=missing_code`)
   if (!expectedState || expectedState !== c.req.query('state')) {
-    return c.redirect(`${config.frontendUrl}?oauth=error=invalid_state`)
+    return c.redirect(`${config.frontendUrl}/signin?oauth=error=invalid_state`)
   }
 
   try {
@@ -69,7 +69,7 @@ authRoutes.get('/google/callback', async (c) => {
     return c.redirect(`${config.frontendUrl}?oauth=success`)
   } catch (e) {
     console.error('Google OAuth failed:', e)
-    return c.redirect(`${config.frontendUrl}?oauth=error=auth_failed`)
+    return c.redirect(`${config.frontendUrl}/signin?oauth=error=auth_failed`)
   }
 })
 
@@ -82,13 +82,13 @@ authRoutes.get('/github', (c) => {
 })
 authRoutes.get('/github/callback', async (c) => {
   const error = c.req.query('error')
-  if (error) return c.redirect(`${config.frontendUrl}?oauth=error=${error}`)
+  if (error) return c.redirect(`${config.frontendUrl}/signin?oauth=error=${error}`)
 
   const code = c.req.query('code')
   const expectedState = getCookie(c, 'oauth_state')
-  if (!code) return c.redirect(`${config.frontendUrl}?oauth=error=missing_code`)
+  if (!code) return c.redirect(`${config.frontendUrl}/signin?oauth=error=missing_code`)
   if (!expectedState || expectedState !== c.req.query('state')) {
-    return c.redirect(`${config.frontendUrl}?oauth=error=invalid_state`)
+    return c.redirect(`${config.frontendUrl}/signin?oauth=error=invalid_state`)
   }
 
   try {
@@ -97,7 +97,7 @@ authRoutes.get('/github/callback', async (c) => {
     return c.redirect(`${config.frontendUrl}?oauth=success`)
   } catch (e) {
     console.error('GitHub OAuth failed:', e)
-    return c.redirect(`${config.frontendUrl}?oauth=error=auth_failed`)
+    return c.redirect(`${config.frontendUrl}/signin?oauth=error=auth_failed`)
   }
 })
 
