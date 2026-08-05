@@ -21,7 +21,7 @@ export const github = new GitHub(
 
 //fonction pour la creation de compte avec email + password
 export async function register(input: RegisterInput): Promise<AuthResponse>{
-  const existing = await User.findOne({ email: input.email })
+  const existing = await User.findOne({ email: input.email, password: { $exists: true, $ne: null } })
   if (existing) throw new Error('An error occurred during registration. Please try again.');
 
   const hashedPassword = await bcrypt.hash(input.password, 10)
@@ -35,7 +35,7 @@ export async function register(input: RegisterInput): Promise<AuthResponse>{
 
 // fonction  pour la connexion de l'utilisateur
 export async function Login(input: LoginInput): Promise<AuthResponse>{
-  const user = await User.findOne({ email: input.email })
+  const user = await User.findOne({ email: input.email, password: { $exists: true, $ne: null } })
   if (!user) throw new Error('Invalid credentials')
   if (!user.password) throw new Error('Invalid credentials')
 
@@ -53,13 +53,14 @@ export async function Logout(refreshToken: string): Promise<boolean>{
    return true
 }
 
-// permet de trouver un utilisateur par email
+// permet de trouver ou creer un utilisateur OAuth, lie par providerId (sans fusion par email)
 async function findOrCreate(data: { email: string; name: string; avatar?: string; googleId?: string; githubId?: string }) {
-  let user = await User.findOne({ email: data.email })
+  let user = null
+  if (data.googleId) user = await User.findOne({ googleId: data.googleId })
+  else if (data.githubId) user = await User.findOne({ githubId: data.githubId })
+
   if (user) {
     const updates: Record<string, string> = {}
-    if (data.googleId && !user.googleId) updates.googleId = data.googleId
-    if (data.githubId && !user.githubId) updates.githubId = data.githubId
     if (data.avatar) updates.avatar = data.avatar
     if (data.name) updates.name = data.name
     if (Object.keys(updates).length > 0) {
