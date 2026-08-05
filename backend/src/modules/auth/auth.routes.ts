@@ -7,7 +7,7 @@ import { config } from "../../config/constants.js";
 
 const authRoutes = new Hono();
 
-const REFRESH_COOKIE = { path: '/', httpOnly: true, secure: true, sameSite: 'Strict' as const, maxAge: 604800 }
+const REFRESH_COOKIE = { path: '/', httpOnly: true, secure: true, sameSite: 'None' as const, maxAge: 604800 }
 
 //Inscription
 authRoutes.post('/register', async (c) => {
@@ -38,7 +38,7 @@ authRoutes.post('/logout', async (c) => {
 
   await Logout(refreshToken)
 
-  deleteCookie(c, 'refreshToken', { path: '/' })
+  deleteCookie(c, 'refreshToken', { path: '/', httpOnly: true, secure: true, sameSite: 'None' })
   return c.json({ message: 'Logged out' })
 })
 
@@ -47,8 +47,8 @@ authRoutes.get('/google', (c) => {
   const state = generateState()
   const codeVerifier = generateCodeVerifier()
   const url = google.createAuthorizationURL(state, codeVerifier, ['openid', 'profile', 'email'])
-  setCookie(c, 'oauth_state', state, { path: '/', httpOnly: true, secure: true, sameSite: 'Lax', maxAge: 600 })
-  setCookie(c, 'code_verifier', codeVerifier, { path: '/', httpOnly: true, secure: true, sameSite: 'Lax', maxAge: 600 })
+  setCookie(c, 'oauth_state', state, { path: '/', httpOnly: true, secure: true, sameSite: 'None', maxAge: 600 })
+  setCookie(c, 'code_verifier', codeVerifier, { path: '/', httpOnly: true, secure: true, sameSite: 'None', maxAge: 600 })
   return c.redirect(url.toString())
 })
 authRoutes.get('/google/callback', async (c) => {
@@ -77,7 +77,7 @@ authRoutes.get('/google/callback', async (c) => {
 authRoutes.get('/github', (c) => {
   const state = generateState()
   const url = github.createAuthorizationURL(state, ['user:email'])
-  setCookie(c, 'oauth_state', state, { path: '/', httpOnly: true, secure: true, sameSite: 'Lax', maxAge: 600 })
+  setCookie(c, 'oauth_state', state, { path: '/', httpOnly: true, secure: true, sameSite: 'None', maxAge: 600 })
   return c.redirect(url.toString())
 })
 authRoutes.get('/github/callback', async (c) => {
