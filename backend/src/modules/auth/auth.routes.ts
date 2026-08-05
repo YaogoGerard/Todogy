@@ -66,7 +66,8 @@ authRoutes.get('/google/callback', async (c) => {
   try {
     const result = await googleLogin(code, codeVerifier)
     setCookie(c, 'refreshToken', result.refreshToken, REFRESH_COOKIE)
-    return c.redirect(`${config.frontendUrl}?oauth=success`)
+    const user = encodeURIComponent(JSON.stringify(result.user))
+    return c.redirect(`${config.frontendUrl}/#oauth=success&access_token=${result.accessToken}&user=${user}`)
   } catch (e) {
     console.error('Google OAuth failed:', e)
     return c.redirect(`${config.frontendUrl}/signin?oauth=error=auth_failed`)
@@ -94,7 +95,8 @@ authRoutes.get('/github/callback', async (c) => {
   try {
     const result = await githubLogin(code)
     setCookie(c, 'refreshToken', result.refreshToken, REFRESH_COOKIE)
-    return c.redirect(`${config.frontendUrl}?oauth=success`)
+    const user = encodeURIComponent(JSON.stringify(result.user))
+    return c.redirect(`${config.frontendUrl}/#oauth=success&access_token=${result.accessToken}&user=${user}`)
   } catch (e) {
     console.error('GitHub OAuth failed:', e)
     return c.redirect(`${config.frontendUrl}/signin?oauth=error=auth_failed`)

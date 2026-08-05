@@ -11,9 +11,22 @@ async function boot() {
   app.use(pinia).use(router)
 
   const authStore = useAuthStore()
-  await authStore.init()
 
-  if (new URLSearchParams(window.location.search).has('oauth')) {
+  const hash = new URLSearchParams(window.location.hash.slice(1))
+  const hasOauthParam = new URLSearchParams(window.location.search).has('oauth')
+
+  if (hash.get('oauth') === 'success' && hash.get('access_token')) {
+    try {
+      authStore.setAuth({ accessToken: hash.get('access_token')!, user: JSON.parse(hash.get('user')!) })
+      history.replaceState(null, '', window.location.pathname)
+    } catch {
+      await authStore.init()
+    }
+  } else {
+    await authStore.init()
+  }
+
+  if (hasOauthParam && !window.location.hash) {
     router.replace({ query: {} })
   }
 
