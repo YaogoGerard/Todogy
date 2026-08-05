@@ -12,6 +12,7 @@ const email = ref('')
 const password = ref('')
 const showPassword = ref(false)
 const oauthError = ref('')
+const formError = ref('')
 
 if (route.query.oauth === 'error' && route.query.error) {
   const err = String(route.query.error)
@@ -23,11 +24,12 @@ if (route.query.oauth === 'error' && route.query.error) {
 }
 
 async function handleSubmit() {
+  formError.value = ''
   try {
     await auth.login(email.value, password.value)
     router.push('/')
   } catch {
-    alert('Invalid email or password')
+    formError.value = 'Email ou mot de passe incorrect.'
   }
 }
 </script>
@@ -67,6 +69,8 @@ async function handleSubmit() {
         <span v-if="auth.loading" class="spinner"></span>
         <span v-else>Sign in</span>
       </button>
+
+      <div v-if="formError" class="form-error" role="alert">{{ formError }}</div>
 
       <div class="form-link">
         Don't have an account? <router-link to="/signup">Sign up</router-link>
