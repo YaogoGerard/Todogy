@@ -49,6 +49,13 @@ export const useTodosStore = defineStore('todos', () => {
     }
     loading.value = true
     try {
+      const local = loadLocal()
+      if (local.length > 0) {
+        for (const t of local) {
+          await createTodo(t.title, t.completed)
+        }
+        saveLocal([])
+      }
       const { data } = await listTodos()
       items.value = data
     } catch {

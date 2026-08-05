@@ -15,8 +15,8 @@ todosRoutes.get('/', async (c) => {
 
 todosRoutes.post('/', async (c) => {
   const { userId } = c.get('jwtPayload') as TokenPayload
-  const { title } = await c.req.json<{ title: string }>()
-  const todo = await create(title, userId)
+  const { title, completed } = await c.req.json<{ title: string; completed?: boolean }>()
+  const todo = await create(title, userId, completed)
   return c.json(todo, 201)
 })
 

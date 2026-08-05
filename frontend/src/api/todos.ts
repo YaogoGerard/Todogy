@@ -12,8 +12,8 @@ export function listTodos() {
   return api.get<Todo[]>('/todos')
 }
 
-export function createTodo(title: string) {
-  return api.post<Todo>('/todos', { title })
+export function createTodo(title: string, completed = false) {
+  return api.post<Todo>('/todos', { title, completed })
 }
 
 export function updateTodo(id: string, data: { title?: string; completed?: boolean }) {

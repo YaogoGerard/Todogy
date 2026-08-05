@@ -1,7 +1,7 @@
 import { Todo } from "./todos.model.js";
 
-export async function create(title: string, userId: string) {
-  const todo = await Todo.create({ title, userId })
+export async function create(title: string, userId: string, completed = false) {
+  const todo = await Todo.create({ title, userId, completed })
   return todo
 }
 
