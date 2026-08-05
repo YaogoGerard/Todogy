@@ -1,17 +1,19 @@
 import { Hono } from "hono";
 import { Login,Logout,register,githubLogin,googleLogin,github,google,refreshAccessToken } from "./auth.service.js";
 import type { RegisterInput, LoginInput } from "./auth.model.js";
-import { getCookie } from "hono/cookie";
+import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import { generateState,generateCodeVerifier } from "arctic";
 import { config } from "../../config/constants.js";
 
 const authRoutes = new Hono();
 
+const REFRESH_COOKIE = { path: '/', httpOnly: true, secure: true, sameSite: 'Strict' as const, maxAge: 604800 }
+
 //Inscription
 authRoutes.post('/register', async (c) => {
   const input = await c.req.json<RegisterInput>()
   const result = await register(input)
-  c.header('Set-Cookie', `refreshToken=${result.refreshToken}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800`)
+  setCookie(c, 'refreshToken', result.refreshToken, REFRESH_COOKIE)
   return c.json({
      accessToken: result.accessToken,
      user:result.user
@@ -22,7 +24,7 @@ authRoutes.post('/register', async (c) => {
 authRoutes.post('/login', async (c) => {
   const input = await c.req.json<LoginInput>()
   const result = await Login(input)
-  c.header('Set-Cookie', `refreshToken=${result.refreshToken}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800`)
+  setCookie(c, 'refreshToken', result.refreshToken, REFRESH_COOKIE)
   return c.json({
     accessToken: result.accessToken,
     user:result.user
@@ -36,7 +38,7 @@ authRoutes.post('/logout', async (c) => {
 
   await Logout(refreshToken)
 
-  c.header('Set-Cookie', 'refreshToken=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0')
+  deleteCookie(c, 'refreshToken', { path: '/' })
   return c.json({ message: 'Logged out' })
 })
 
@@ -45,8 +47,8 @@ authRoutes.get('/google', (c) => {
   const state = generateState()
   const codeVerifier = generateCodeVerifier()
   const url = google.createAuthorizationURL(state, codeVerifier, ['openid', 'profile', 'email'])
-  c.header('Set-Cookie', `oauth_state=${state}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`)
-  c.header('Set-Cookie', `code_verifier=${codeVerifier}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`)
+  setCookie(c, 'oauth_state', state, { path: '/', httpOnly: true, secure: true, sameSite: 'Lax', maxAge: 600 })
+  setCookie(c, 'code_verifier', codeVerifier, { path: '/', httpOnly: true, secure: true, sameSite: 'Lax', maxAge: 600 })
   return c.redirect(url.toString())
 })
 authRoutes.get('/google/callback', async (c) => {
@@ -63,7 +65,7 @@ authRoutes.get('/google/callback', async (c) => {
 
   try {
     const result = await googleLogin(code, codeVerifier)
-    c.header('Set-Cookie', `refreshToken=${result.refreshToken}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800`)
+    setCookie(c, 'refreshToken', result.refreshToken, REFRESH_COOKIE)
     return c.redirect(`${config.frontendUrl}?oauth=success`)
   } catch (e) {
     console.error('Google OAuth failed:', e)
@@ -75,7 +77,7 @@ authRoutes.get('/google/callback', async (c) => {
 authRoutes.get('/github', (c) => {
   const state = generateState()
   const url = github.createAuthorizationURL(state, ['user:email'])
-  c.header('Set-Cookie', `oauth_state=${state}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`)
+  setCookie(c, 'oauth_state', state, { path: '/', httpOnly: true, secure: true, sameSite: 'Lax', maxAge: 600 })
   return c.redirect(url.toString())
 })
 authRoutes.get('/github/callback', async (c) => {
@@ -91,7 +93,7 @@ authRoutes.get('/github/callback', async (c) => {
 
   try {
     const result = await githubLogin(code)
-    c.header('Set-Cookie', `refreshToken=${result.refreshToken}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800`)
+    setCookie(c, 'refreshToken', result.refreshToken, REFRESH_COOKIE)
     return c.redirect(`${config.frontendUrl}?oauth=success`)
   } catch (e) {
     console.error('GitHub OAuth failed:', e)
@@ -105,7 +107,7 @@ authRoutes.post('/refresh', async (c) => {
 
   try {
     const result = await refreshAccessToken(refreshToken)
-    c.header('Set-Cookie', `refreshToken=${result.refreshToken}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800`)
+    setCookie(c, 'refreshToken', result.refreshToken, REFRESH_COOKIE)
     return c.json({ accessToken: result.accessToken, user: result.user })
   } catch {
     return c.json({ error: 'Invalid refresh token' }, 401)
