@@ -19,19 +19,6 @@ export const useTodosStore = defineStore('todos', () => {
     return 'local_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7)
   }
 
-  function loadLocal(): LocalTodo[] {
-    try {
-      const raw = localStorage.getItem('todos')
-      return raw ? JSON.parse(raw) : []
-    } catch {
-      return []
-    }
-  }
-
-  function saveLocal(todos: LocalTodo[]) {
-    localStorage.setItem('todos', JSON.stringify(todos))
-  }
-
   const filteredItems = computed(() => {
     if (filter.value === 'all') return items.value
     return items.value.filter(t => filter.value === 'done' ? t.completed : !t.completed)
@@ -44,17 +31,14 @@ export const useTodosStore = defineStore('todos', () => {
   async function fetchTodos() {
     const token = localStorage.getItem('accessToken')
     if (!token) {
-      items.value = loadLocal()
+      items.value = items.value.filter(t => t._id.startsWith('local_'))
       return
     }
     loading.value = true
     try {
-      const local = loadLocal()
-      if (local.length > 0) {
-        for (const t of local) {
-          await createTodo(t.title, t.completed)
-        }
-        saveLocal([])
+      const local = items.value.filter(t => t._id.startsWith('local_'))
+      for (const t of local) {
+        await createTodo(t.title, t.completed)
       }
       const { data } = await listTodos()
       items.value = data
@@ -75,7 +59,6 @@ export const useTodosStore = defineStore('todos', () => {
         createdAt: new Date().toISOString(),
       }
       items.value.push(todo)
-      saveLocal([...loadLocal(), todo])
       return
     }
     const { data } = await createTodo(title)
@@ -85,10 +68,7 @@ export const useTodosStore = defineStore('todos', () => {
   async function toggleDone(id: string, completed: boolean) {
     if (id.startsWith('local_')) {
       const idx = items.value.findIndex(t => t._id === id)
-      if (idx !== -1) {
-        items.value[idx].completed = completed
-        saveLocal(items.value.filter(t => t._id.startsWith('local_')) as LocalTodo[])
-      }
+      if (idx !== -1) items.value[idx].completed = completed
       return
     }
     const { data } = await updateTodo(id, { completed })
@@ -99,7 +79,6 @@ export const useTodosStore = defineStore('todos', () => {
   async function remove(id: string) {
     if (id.startsWith('local_')) {
       items.value = items.value.filter(t => t._id !== id)
-      saveLocal(items.value.filter(t => t._id.startsWith('local_')) as LocalTodo[])
       return
     }
     await removeTodo(id)
