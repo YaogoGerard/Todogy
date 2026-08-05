@@ -50,11 +50,25 @@ authRoutes.get('/google', (c) => {
   return c.redirect(url.toString())
 })
 authRoutes.get('/google/callback', async (c) => {
+  const error = c.req.query('error')
+  if (error) return c.redirect(`${config.frontendUrl}?oauth=error=${error}`)
+
   const code = c.req.query('code')
   const codeVerifier = getCookie(c, 'code_verifier')
-  const result = await googleLogin(code!, codeVerifier!)
-  c.header('Set-Cookie', `refreshToken=${result.refreshToken}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800`)
-  return c.redirect(`${config.frontendUrl}?oauth=success`)
+  const expectedState = getCookie(c, 'oauth_state')
+  if (!code || !codeVerifier) return c.redirect(`${config.frontendUrl}?oauth=error=missing_code`)
+  if (!expectedState || expectedState !== c.req.query('state')) {
+    return c.redirect(`${config.frontendUrl}?oauth=error=invalid_state`)
+  }
+
+  try {
+    const result = await googleLogin(code, codeVerifier)
+    c.header('Set-Cookie', `refreshToken=${result.refreshToken}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800`)
+    return c.redirect(`${config.frontendUrl}?oauth=success`)
+  } catch (e) {
+    console.error('Google OAuth failed:', e)
+    return c.redirect(`${config.frontendUrl}?oauth=error=auth_failed`)
+  }
 })
 
 //Github
@@ -65,10 +79,24 @@ authRoutes.get('/github', (c) => {
   return c.redirect(url.toString())
 })
 authRoutes.get('/github/callback', async (c) => {
+  const error = c.req.query('error')
+  if (error) return c.redirect(`${config.frontendUrl}?oauth=error=${error}`)
+
   const code = c.req.query('code')
-  const result = await githubLogin(code!)
-  c.header('Set-Cookie', `refreshToken=${result.refreshToken}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800`)
-  return c.redirect(`${config.frontendUrl}?oauth=success`)
+  const expectedState = getCookie(c, 'oauth_state')
+  if (!code) return c.redirect(`${config.frontendUrl}?oauth=error=missing_code`)
+  if (!expectedState || expectedState !== c.req.query('state')) {
+    return c.redirect(`${config.frontendUrl}?oauth=error=invalid_state`)
+  }
+
+  try {
+    const result = await githubLogin(code)
+    c.header('Set-Cookie', `refreshToken=${result.refreshToken}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800`)
+    return c.redirect(`${config.frontendUrl}?oauth=success`)
+  } catch (e) {
+    console.error('GitHub OAuth failed:', e)
+    return c.redirect(`${config.frontendUrl}?oauth=error=auth_failed`)
+  }
 })
 
 authRoutes.post('/refresh', async (c) => {

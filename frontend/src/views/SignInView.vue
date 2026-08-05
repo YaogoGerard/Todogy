@@ -1,15 +1,26 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { GOOGLE_AUTH_URL, GITHUB_AUTH_URL } from '../api/auth'
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
 
 const email = ref('')
 const password = ref('')
 const showPassword = ref(false)
+const oauthError = ref('')
+
+if (route.query.oauth === 'error' && route.query.error) {
+  const err = String(route.query.error)
+  oauthError.value = err === 'invalid_state'
+    ? 'Session OAuth invalide. Veuillez réessayer.'
+    : err === 'missing_code'
+      ? 'Code OAuth manquant. Veuillez réessayer.'
+      : 'Connexion OAuth échouée. Veuillez réessayer.'
+}
 
 async function handleSubmit() {
   try {
@@ -25,6 +36,8 @@ async function handleSubmit() {
   <div class="stage">
     <h1 class="text-center">Welcome back</h1>
     <div class="sub text-center">Log in to access your tasks.</div>
+
+    <div v-if="oauthError" class="oauth-error" role="alert">{{ oauthError }}</div>
 
     <form class="card3d" style="padding: 24px" @submit.prevent="handleSubmit">
       <div class="form-group">
