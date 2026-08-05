@@ -29,7 +29,7 @@ async function handleSubmit() {
     await auth.login(email.value, password.value)
     router.push('/')
   } catch {
-    formError.value = 'Email ou mot de passe incorrect.'
+    formError.value = 'Invalid email or password.'
   }
 }
 </script>
