@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { GOOGLE_AUTH_URL, GITHUB_AUTH_URL } from '../api/auth'
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
 
 const name = ref('')
@@ -13,6 +14,11 @@ const password = ref('')
 const confirmPassword = ref('')
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
+const oauthError = ref('')
+
+if (route.query.oauth === 'error' && route.query.error === 'no_account') {
+  oauthError.value = 'Aucun compte trouvé. Créez d\'abord un compte pour pouvoir vous connecter.'
+}
 
 async function handleSubmit() {
   if (password.value !== confirmPassword.value) {
@@ -32,6 +38,8 @@ async function handleSubmit() {
   <div class="stage">
     <h1 class="text-center">Get started</h1>
     <div class="sub text-center">Create your account to save your tasks.</div>
+
+    <div v-if="oauthError" class="oauth-error" role="alert">{{ oauthError }}</div>
 
     <form class="card3d" style="padding: 24px" @submit.prevent="handleSubmit">
       <div class="form-group">

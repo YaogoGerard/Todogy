@@ -54,7 +54,7 @@ export async function Logout(refreshToken: string): Promise<boolean>{
 }
 
 // permet de trouver ou creer un utilisateur OAuth, lie par providerId (sans fusion par email)
-async function findOrCreate(data: { email: string; name: string; avatar?: string; googleId?: string; githubId?: string }) {
+async function findOrCreate(data: { email: string; name: string; avatar?: string; googleId?: string; githubId?: string }, mode: 'signup' | 'signin' = 'signup') {
   let user = null
   if (data.googleId) user = await User.findOne({ googleId: data.googleId })
   else if (data.githubId) user = await User.findOne({ githubId: data.githubId })
@@ -69,19 +69,20 @@ async function findOrCreate(data: { email: string; name: string; avatar?: string
     }
     return user
   }
+  if (mode === 'signin') throw new Error('No account found for this provider. Please sign up first.')
   return await User.create(data)
 }
 
 //Google oAuth2
-export async function googleLogin(code: string, codeVerifier: string): Promise<AuthResponse>{
+export async function googleLogin(code: string, codeVerifier: string, mode: 'signup' | 'signin' = 'signup'): Promise<AuthResponse>{
   const tokens = await google.validateAuthorizationCode(code, codeVerifier)
   const claims = decodeIdToken(tokens.idToken()) as GoogleClaims
-  const user = await findOrCreate({ email: claims.email, name: claims.name, avatar: claims.picture, googleId: claims.sub })
+  const user = await findOrCreate({ email: claims.email, name: claims.name, avatar: claims.picture, googleId: claims.sub }, mode)
   return generateTokens(user)
 }
 
 //Github oAuth2
-export async function githubLogin(code: string): Promise<AuthResponse>{
+export async function githubLogin(code: string, mode: 'signup' | 'signin' = 'signup'): Promise<AuthResponse>{
   const tokens = await github.validateAuthorizationCode(code)
   const accessToken = tokens.accessToken()
   const res = await fetch('https://api.github.com/user', { headers: { Authorization: `Bearer ${accessToken}` } })
@@ -95,7 +96,7 @@ export async function githubLogin(code: string): Promise<AuthResponse>{
   }
   if (!email) throw new Error('GitHub account has no email')
 
-  const user = await findOrCreate({ email, name: profile.name || profile.login, avatar: profile.avatar_url, githubId: profile.id.toString() })
+  const user = await findOrCreate({ email, name: profile.name || profile.login, avatar: profile.avatar_url, githubId: profile.id.toString() }, mode)
   return generateTokens(user)
 }
 

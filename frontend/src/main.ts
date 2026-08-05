@@ -13,7 +13,6 @@ async function boot() {
   const authStore = useAuthStore()
 
   const hash = new URLSearchParams(window.location.hash.slice(1))
-  const hasOauthParam = new URLSearchParams(window.location.search).has('oauth')
 
   if (hash.get('oauth') === 'success' && hash.get('access_token')) {
     try {
@@ -24,10 +23,6 @@ async function boot() {
     }
   } else {
     await authStore.init()
-  }
-
-  if (hasOauthParam && !window.location.hash) {
-    router.replace({ query: {} })
   }
 
   app.mount('#app')
