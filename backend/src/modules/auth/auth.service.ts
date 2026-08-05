@@ -55,13 +55,20 @@ export async function Logout(refreshToken: string): Promise<boolean>{
 
 // permet de trouver un utilisateur par email
 async function findOrCreate(data: { email: string; name: string; avatar?: string; googleId?: string; githubId?: string }) {
-  const user = await User.findOne({ email: data.email })
+  let user = await User.findOne({ email: data.email })
   if (user) {
-      if (data.googleId && !user.googleId) await User.updateOne({ _id: user._id }, { googleId: data.googleId })
-      if (data.githubId && !user.githubId) await User.updateOne({ _id: user._id }, { githubId: data.githubId })
-      return user
+    const updates: Record<string, string> = {}
+    if (data.googleId && !user.googleId) updates.googleId = data.googleId
+    if (data.githubId && !user.githubId) updates.githubId = data.githubId
+    if (data.avatar) updates.avatar = data.avatar
+    if (data.name) updates.name = data.name
+    if (Object.keys(updates).length > 0) {
+      await User.updateOne({ _id: user._id }, updates)
+      user = Object.assign(user, updates)
     }
-    return await User.create(data)
+    return user
+  }
+  return await User.create(data)
 }
 
 //Google oAuth2
@@ -75,9 +82,19 @@ export async function googleLogin(code: string, codeVerifier: string): Promise<A
 //Github oAuth2
 export async function githubLogin(code: string): Promise<AuthResponse>{
   const tokens = await github.validateAuthorizationCode(code)
-  const res = await fetch('https://api.github.com/user', { headers: { Authorization: `Bearer ${tokens.accessToken()}` } })
+  const accessToken = tokens.accessToken()
+  const res = await fetch('https://api.github.com/user', { headers: { Authorization: `Bearer ${accessToken}` } })
   const profile = await res.json() as GitHubProfile
-  const user = await findOrCreate({ email: profile.email, name: profile.name || profile.login, avatar: profile.avatar_url, githubId: profile.id.toString() })
+
+  let email = profile.email
+  if (!email) {
+    const emRes = await fetch('https://api.github.com/user/emails', { headers: { Authorization: `Bearer ${accessToken}` } })
+    const emails = await emRes.json() as Array<{ email: string; primary?: boolean }>
+    email = emails.find(e => e.primary)?.email ?? emails[0]?.email
+  }
+  if (!email) throw new Error('GitHub account has no email')
+
+  const user = await findOrCreate({ email, name: profile.name || profile.login, avatar: profile.avatar_url, githubId: profile.id.toString() })
   return generateTokens(user)
 }
 
