@@ -93,6 +93,7 @@ graph TD
         SignInView["SignInView.vue"]
         SignUpView["SignUpView.vue"]
         NavBar["NavBar.vue"]
+        OAuthButtons["OAuthButtons.vue"]
     end
 
     Router --> TodosView
@@ -102,6 +103,8 @@ graph TD
     TodosView --> NavBar
     SignInView --> AuthStore
     SignUpView --> AuthStore
+    SignInView --> OAuthButtons
+    SignUpView --> OAuthButtons
     AuthStore --> AxiosAPI
     TodosStore --> AxiosAPI
 ```
@@ -131,9 +134,9 @@ sequenceDiagram
     API->>DB: Store refreshToken
     API-->>Axios: 200 { accessToken, user } + Set-Cookie: refreshToken
     Axios-->>AuthStore: response
-    AuthStore->>AuthStore: setAuth(data) → localStorage.setItem('accessToken')
+    AuthStore->>AuthStore: setAuth(data) → accessToken kept in memory
     AuthStore->>TodosStore: syncLocalToBackend()
-    TodosStore->>Axios: POST /todos (for each local task)
+    TodosStore->>Axios: POST /todos (for each local task, in parallel)
     TodosStore->>Axios: GET /todos
     Axios-->>TodosStore: merged todos list
     AuthStore-->>SignInView: resolved
@@ -166,7 +169,7 @@ sequenceDiagram
     API->>API: sign(newRefreshToken, 7d)
     API->>DB: Update refreshToken (rotation)
     API-->>Axios: 200 { accessToken } + Set-Cookie: newRefreshToken
-    Axios->>Axios: localStorage.setItem('accessToken', newToken)
+    Axios->>Axios: keep new accessToken in memory
     Axios->>API: RETRY GET /todos (Authorization: Bearer newToken)
     API-->>Axios: 200 [todos]
     Axios-->>TodosStore: data
@@ -204,9 +207,8 @@ sequenceDiagram
     API->>API: sign(accessToken), sign(refreshToken)
     API->>DB: Store refreshToken
     API-->>Browser: 302 Redirect + Set-Cookie: refreshToken
-    Browser->>Browser: Redirect to FRONTEND_URL?oauth=success
-    Browser->>App: App mounts, authStore.init()
-    App->>API: POST /auth/refresh (with cookie)
-    API-->>App: 200 { accessToken, user }
-    App->>App: localStorage.setItem('accessToken')
+    Browser->>Browser: Redirect to FRONTEND_URL#oauth=success&access_token=...&user=...
+    Browser->>App: main.ts parses the hash, calls setAuth()
+    App->>App: history.replaceState() scrubs the token from the URL
+    App->>App: accessToken kept in memory
 ```

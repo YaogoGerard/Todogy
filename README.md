@@ -23,11 +23,12 @@
 
 ## Features
 
-- **Dual mode** — write tasks without an account (localStorage), log in to persist them server-side
+- **Dual mode** — write tasks without an account (in-memory), log in to persist them server-side
 - **OAuth2 authentication** — Google & GitHub login via Arctic
 - **JWT with refresh rotation** — 15 min accessToken, 7-day refreshToken in httpOnly cookie, rotated on each refresh
+- **Security hardening** — CORS allowlist, rate-limited auth endpoints, zod request validation, proper 4xx error codes
 - **Progress tracking** — circular progress dial + confetti at 100%
-- **Guest→Auth merge** — local tasks sync to the backend on login
+- **Guest→Auth merge** — in-memory tasks sync to the backend on login
 - **Responsive** — glassmorphism Orbit design, mobile-first
 
 ## Stack
@@ -57,6 +58,17 @@ npm install
 npm run dev                # → http://localhost:5173
 ```
 
+## Testing
+
+Both packages use [Vitest](https://vitest.dev). Tests live in `backend/tests/` and `frontend/tests/`.
+
+```bash
+cd backend && npm test     # API unit tests + route integration tests (no DB needed)
+cd frontend && npm test    # stores, components and views tests
+```
+
+CI builds and tests both packages on every push/PR to `main` (see [.github/workflows/ci.yml](.github/workflows/ci.yml)), and the [deploy pipeline](.github/workflows/deploy.yml) only deploys once the test job is green.
+
 ## Documentation
 
 | Doc | What it covers |
@@ -78,13 +90,14 @@ todogy/
 │       │   ├── auth/         # register, login, OAuth, refresh, middleware
 │       │   ├── todos/        # CRUD with ownership filter
 │       │   └── users/        # Mongoose model
-│       └── shared/database/  # MongoDB connection
+│       └── shared/           # database, zod validation, rate limiting, HttpError
 ├── frontend/
 │   └── src/
 │       ├── api/              # Axios instance, auth & todos endpoints
 │       ├── stores/           # Pinia (auth, todos)
 │       ├── views/            # TodosView, SignInView, SignUpView
-│       └── components/       # NavBar
+│       ├── components/       # NavBar, OAuthButtons
+│       └── utils/            # OAuth / error message helpers
 └── docs/                     # Engineering documentation
 ```
 

@@ -19,16 +19,16 @@ const confettiPieces = Array.from({ length: 60 }, (_, i) => ({
 function addTodo() {
   const val = newTitle.value.trim()
   if (!val) return
-  todosStore.addTodo(val)
+  todosStore.addTodo(val).catch(() => {})
   newTitle.value = ''
 }
 
 function handleToggle(id: string, completed: boolean) {
-  todosStore.toggleDone(id, completed)
+  todosStore.toggleDone(id, completed).catch(() => {})
 }
 
 function handleRemove(id: string) {
-  todosStore.remove(id)
+  todosStore.remove(id).catch(() => {})
 }
 
 onMounted(() => {

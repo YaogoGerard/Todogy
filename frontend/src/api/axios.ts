@@ -5,6 +5,12 @@ const api = axios.create({
   withCredentials: true,
 })
 
+let accessToken: string | null = null
+
+export function setAccessToken(token: string | null) {
+  accessToken = token
+}
+
 let isRefreshing = false
 let failedQueue: Array<{ resolve: (token: string) => void; reject: (err: unknown) => void }> = []
 
@@ -17,8 +23,7 @@ function processQueue(error: unknown, token: string | null) {
 }
 
 api.interceptors.request.use(config => {
-  const token = localStorage.getItem('accessToken')
-  if (token) config.headers.Authorization = `Bearer ${token}`
+  if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`
   return config
 })
 
@@ -42,13 +47,13 @@ api.interceptors.response.use(
 
       try {
         const { data } = await api.post('/auth/refresh')
-        localStorage.setItem('accessToken', data.accessToken)
+        setAccessToken(data.accessToken)
         processQueue(null, data.accessToken)
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`
         return api(originalRequest)
       } catch (refreshError) {
         processQueue(refreshError, null)
-        localStorage.removeItem('accessToken')
+        setAccessToken(null)
         window.location.href = '/signin'
         return Promise.reject(refreshError)
       } finally {

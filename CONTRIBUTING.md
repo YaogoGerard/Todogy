@@ -15,10 +15,12 @@ Thanks for your interest in contributing! Here's how to get started.
 # Backend
 cd backend
 npm run dev     # http://localhost:3000
+npm test        # run the backend test suite (Vitest)
 
 # Frontend (new terminal)
 cd frontend
 npm run dev     # http://localhost:5173
+npm test        # run the frontend test suite (Vitest)
 ```
 
 ## What to Work On
@@ -28,9 +30,9 @@ Check the [open issues](https://github.com/YaogoGerard/Todogy/issues) for a list
 ## Pull Request Guidelines
 
 - Keep PRs focused on a single concern
-- Update or add tests if applicable
+- Update or add tests if applicable (`npm test` in `backend/` and `frontend/`)
 - Update docs if you change behaviour
-- Make sure both `npm run build` pass in `backend/` and `frontend/`
+- Make sure `npm run build` and `npm test` pass in `backend/` and `frontend/`
 - Write a clear commit message and PR description
 
 ## Code Style

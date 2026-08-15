@@ -1,11 +1,11 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 export async function connectDB(uri) {
     try {
         await mongoose.connect(uri);
-        console.log("Connected to database");
+        console.log('Connected to database');
     }
-    catch (e) {
-        console.error("Database connection failled:", e);
-        process.exit(1);
+    catch (error) {
+        console.error('Database connection failed:', error);
+        throw error;
     }
 }

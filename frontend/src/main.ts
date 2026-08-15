@@ -4,6 +4,7 @@ import './style.css'
 import App from './App.vue'
 import router from './router'
 import { useAuthStore } from './stores/auth'
+
 async function boot() {
   const start = Date.now()
   const app = createApp(App)
@@ -13,11 +14,17 @@ async function boot() {
   const authStore = useAuthStore()
 
   const hash = new URLSearchParams(window.location.hash.slice(1))
+  const oauthSuccess = hash.get('oauth') === 'success' && hash.get('access_token')
 
-  if (hash.get('oauth') === 'success' && hash.get('access_token')) {
+  if (oauthSuccess) {
+    history.replaceState(null, '', window.location.pathname)
+  }
+
+  if (oauthSuccess) {
     try {
-      authStore.setAuth({ accessToken: hash.get('access_token')!, user: JSON.parse(hash.get('user')!) })
-      history.replaceState(null, '', window.location.pathname)
+      const userRaw = hash.get('user')
+      if (!userRaw) throw new Error('Missing OAuth user payload')
+      authStore.setAuth({ accessToken: hash.get('access_token')!, user: JSON.parse(userRaw) })
     } catch {
       await authStore.init()
     }

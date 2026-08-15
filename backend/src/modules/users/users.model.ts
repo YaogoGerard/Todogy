@@ -1,6 +1,16 @@
-import mongoose from "mongoose"
+import mongoose from 'mongoose'
 
-const userSchema = new mongoose.Schema({
+export interface IUser {
+  email: string
+  name: string
+  password?: string
+  refreshToken?: string
+  avatar?: string
+  googleId?: string
+  githubId?: string
+}
+
+const userSchema = new mongoose.Schema<IUser>({
   email: { type: String, required: true },
   name: { type: String, required: true },
   password: { type: String },
@@ -10,4 +20,4 @@ const userSchema = new mongoose.Schema({
   githubId: { type: String, unique: true, sparse: true },
 }, { timestamps: true })
 
-export const User = mongoose.model("User", userSchema);
+export const User = mongoose.model<IUser>('User', userSchema)

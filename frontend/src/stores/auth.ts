@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { login as apiLogin, register as apiRegister, logout as apiLogout, refresh as apiRefresh } from '../api/auth'
 import type { AuthResponse } from '../api/auth'
+import { setAccessToken } from '../api/axios'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<AuthResponse['user'] | null>(null)
@@ -13,18 +14,16 @@ export const useAuthStore = defineStore('auth', () => {
   function setAuth(data: AuthResponse) {
     accessToken.value = data.accessToken
     user.value = data.user
-    localStorage.setItem('accessToken', data.accessToken)
+    setAccessToken(data.accessToken)
   }
 
   function clearAuth() {
     accessToken.value = null
     user.value = null
-    localStorage.removeItem('accessToken')
+    setAccessToken(null)
   }
 
   async function init() {
-    const token = localStorage.getItem('accessToken')
-    if (token) accessToken.value = token
     try {
       const { data } = await apiRefresh()
       setAuth(data)

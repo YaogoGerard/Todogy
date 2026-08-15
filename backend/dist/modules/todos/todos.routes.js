@@ -1,6 +1,7 @@
-import { Hono } from "hono";
-import { authMiddleware } from "../auth/auth.middleware.js";
-import { create, findAll, findById, update, remove } from "./todos.service.js";
+import { Hono } from 'hono';
+import { authMiddleware } from '../auth/auth.middleware.js';
+import { create, findAll, findById, update, remove } from './todos.service.js';
+import { parseJsonBody, createTodoSchema, updateTodoSchema } from '../../shared/validation.js';
 const todosRoutes = new Hono();
 todosRoutes.use('*', authMiddleware);
 todosRoutes.get('/', async (c) => {
@@ -10,8 +11,8 @@ todosRoutes.get('/', async (c) => {
 });
 todosRoutes.post('/', async (c) => {
     const { userId } = c.get('jwtPayload');
-    const { title } = await c.req.json();
-    const todo = await create(title, userId);
+    const body = await parseJsonBody(c, createTodoSchema);
+    const todo = await create(body.title, userId, body.completed);
     return c.json(todo, 201);
 });
 todosRoutes.get('/:id', async (c) => {
@@ -21,7 +22,7 @@ todosRoutes.get('/:id', async (c) => {
 });
 todosRoutes.put('/:id', async (c) => {
     const { userId } = c.get('jwtPayload');
-    const body = await c.req.json();
+    const body = await parseJsonBody(c, updateTodoSchema);
     const todo = await update(c.req.param('id'), userId, body);
     return c.json(todo);
 });

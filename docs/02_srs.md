@@ -24,7 +24,7 @@ graph TD
 | ID | Requirement | Priority |
 |---|---|---|
 | F01 | The system **MUST** allow a guest to create a task by entering a title | MUST |
-| F02 | The system **MUST** persist guest tasks in localStorage | MUST |
+| F02 | The system **MUST** keep guest tasks available for the current session (in-memory only, no persistence) | MUST |
 | F03 | The system **MUST** allow a guest to mark a task as completed | MUST |
 | F04 | The system **MUST** allow a guest to delete a task | MUST |
 | F05 | The system **MUST** show a progress indicator of completed vs total tasks | MUST |
@@ -74,8 +74,12 @@ graph TD
 | N03 | The frontend **MUST** run on Vue 3 + Vite | Technology |
 | N04 | The database **MUST** be MongoDB | Technology |
 | N05 | Passwords **MUST** be hashed with bcryptjs | Security |
-| N06 | The refreshToken cookie **MUST** be HttpOnly, Secure, SameSite=Strict | Security |
+| N06 | The refreshToken cookie **MUST** be HttpOnly, Secure, SameSite=None | Security |
 | N07 | Guest data **MUST NOT** be transmitted to the backend | Privacy |
+| N08 | The API **MUST** only accept requests from the configured `FRONTEND_URL` origin (CORS allowlist) | Security |
+| N09 | Auth endpoints **MUST** be rate limited to resist brute-force attempts | Security |
+| N10 | Request payloads **MUST** be validated with zod before processing | Reliability |
+| N11 | The accessToken **MUST NOT** be persisted in localStorage (memory only) | Security |
 
 ---
 
@@ -83,10 +87,13 @@ graph TD
 
 | Scenario | Expected Response |
 |---|---|
-| Invalid email/password | HTTP 401, `{ "error": "Invalid credentials" }` |
+| Invalid email/password | HTTP 401, `{ "error": "Invalid email or password" }` |
 | Expired accessToken | HTTP 401 → auto-refresh via interceptor |
 | Invalid/expired refreshToken | HTTP 401 → redirect to `/signin` |
-| Duplicate email on register | HTTP 500 (generic message) |
+| Duplicate email on register | HTTP 409 |
+| Malformed / invalid request payload | HTTP 400 |
 | Task not found or not owned | HTTP 404 |
 | Missing auth header | HTTP 401 |
-| MongoDB connection failure | Server crash on startup |
+| Rate limit exceeded | HTTP 429 |
+| Request from a disallowed origin | CORS headers withheld (browser blocks response) |
+| MongoDB connection failure | Graceful startup failure with exit code 1 |

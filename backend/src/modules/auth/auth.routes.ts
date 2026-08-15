@@ -1,59 +1,57 @@
-import { Hono } from "hono";
-import { Login,Logout,register,githubLogin,googleLogin,github,google,refreshAccessToken } from "./auth.service.js";
-import type { RegisterInput, LoginInput } from "./auth.model.js";
-import { getCookie, setCookie, deleteCookie } from "hono/cookie";
-import { generateState,generateCodeVerifier } from "arctic";
-import { config } from "../../config/constants.js";
+import { Hono } from 'hono'
+import { login, logout, register, githubLogin, googleLogin, github, google, refreshAccessToken } from './auth.service.js'
+import type { AuthResponse } from './auth.model.js'
+import { getCookie, setCookie, deleteCookie } from 'hono/cookie'
+import { generateState, generateCodeVerifier } from 'arctic'
+import { config } from '../../config/constants.js'
+import { parseJsonBody, registerSchema, loginSchema } from '../../shared/validation.js'
+import { rateLimit } from '../../shared/middleware/rate-limit.js'
+import type { Context } from 'hono'
 
-const authRoutes = new Hono();
+const authRoutes = new Hono()
 
 const REFRESH_COOKIE = { path: '/', httpOnly: true, secure: true, sameSite: 'None' as const, maxAge: 604800 }
+const OAUTH_STATE_COOKIE = { path: '/', httpOnly: true, secure: true, sameSite: 'None' as const, maxAge: 600 }
 
-//Inscription
-authRoutes.post('/register', async (c) => {
-  const input = await c.req.json<RegisterInput>()
+// Register a new account
+authRoutes.post('/register', rateLimit({ windowMs: 60 * 60 * 1000, max: 10 }), async (c) => {
+  const input = await parseJsonBody(c, registerSchema)
   const result = await register(input)
   setCookie(c, 'refreshToken', result.refreshToken, REFRESH_COOKIE)
-  return c.json({
-     accessToken: result.accessToken,
-     user:result.user
-   })
+  return c.json({ accessToken: result.accessToken, user: result.user })
 })
 
-//Connexion
-authRoutes.post('/login', async (c) => {
-  const input = await c.req.json<LoginInput>()
-  const result = await Login(input)
+// Log in with email + password
+authRoutes.post('/login', rateLimit({ windowMs: 15 * 60 * 1000, max: 20 }), async (c) => {
+  const input = await parseJsonBody(c, loginSchema)
+  const result = await login(input)
   setCookie(c, 'refreshToken', result.refreshToken, REFRESH_COOKIE)
-  return c.json({
-    accessToken: result.accessToken,
-    user:result.user
-  })
+  return c.json({ accessToken: result.accessToken, user: result.user })
 })
 
-// deconnexion
+// Log out
 authRoutes.post('/logout', async (c) => {
-  const refreshToken = getCookie(c,'refreshToken')
+  const refreshToken = getCookie(c, 'refreshToken')
   if (!refreshToken) return c.json({ message: 'Already logged out' })
 
-  await Logout(refreshToken)
-
-  deleteCookie(c, 'refreshToken', { path: '/', httpOnly: true, secure: true, sameSite: 'None' })
+  await logout(refreshToken)
+  deleteCookie(c, 'refreshToken', REFRESH_COOKIE)
   return c.json({ message: 'Logged out' })
 })
 
-//Google
+// Google OAuth2
 authRoutes.get('/google', (c) => {
   const state = generateState()
   const codeVerifier = generateCodeVerifier()
   const url = google.createAuthorizationURL(state, codeVerifier, ['openid', 'profile', 'email'])
   const mode = c.req.query('mode') === 'signin' ? 'signin' : 'signup'
-  setCookie(c, 'oauth_state', state, { path: '/', httpOnly: true, secure: true, sameSite: 'None', maxAge: 600 })
-  setCookie(c, 'code_verifier', codeVerifier, { path: '/', httpOnly: true, secure: true, sameSite: 'None', maxAge: 600 })
-  setCookie(c, 'oauth_mode', mode, { path: '/', httpOnly: true, secure: true, sameSite: 'None', maxAge: 600 })
+  setCookie(c, 'oauth_state', state, OAUTH_STATE_COOKIE)
+  setCookie(c, 'code_verifier', codeVerifier, OAUTH_STATE_COOKIE)
+  setCookie(c, 'oauth_mode', mode, OAUTH_STATE_COOKIE)
   return c.redirect(url.toString())
 })
-authRoutes.get('/google/callback', async (c) => {
+
+authRoutes.get('/google/callback', rateLimit({ windowMs: 60 * 1000, max: 10 }), async (c) => {
   const error = c.req.query('error')
   if (error) return c.redirect(`${config.frontendUrl}/signin?oauth=error=${error}`)
 
@@ -69,25 +67,24 @@ authRoutes.get('/google/callback', async (c) => {
   try {
     const result = await googleLogin(code, codeVerifier, mode)
     setCookie(c, 'refreshToken', result.refreshToken, REFRESH_COOKIE)
-    const user = encodeURIComponent(JSON.stringify(result.user))
-    return c.redirect(`${config.frontendUrl}/#oauth=success&access_token=${result.accessToken}&user=${user}`)
+    return oauthSuccessRedirect(c, result)
   } catch (e) {
     console.error('Google OAuth failed:', e)
-    if (mode === 'signin') return c.redirect(`${config.frontendUrl}/signup?oauth=error=no_account`)
-    return c.redirect(`${config.frontendUrl}/signin?oauth=error=auth_failed`)
+    return oauthErrorRedirect(c, mode)
   }
 })
 
-//Github
+// GitHub OAuth2
 authRoutes.get('/github', (c) => {
   const state = generateState()
   const url = github.createAuthorizationURL(state, ['user:email'])
   const mode = c.req.query('mode') === 'signin' ? 'signin' : 'signup'
-  setCookie(c, 'oauth_state', state, { path: '/', httpOnly: true, secure: true, sameSite: 'None', maxAge: 600 })
-  setCookie(c, 'oauth_mode', mode, { path: '/', httpOnly: true, secure: true, sameSite: 'None', maxAge: 600 })
+  setCookie(c, 'oauth_state', state, OAUTH_STATE_COOKIE)
+  setCookie(c, 'oauth_mode', mode, OAUTH_STATE_COOKIE)
   return c.redirect(url.toString())
 })
-authRoutes.get('/github/callback', async (c) => {
+
+authRoutes.get('/github/callback', rateLimit({ windowMs: 60 * 1000, max: 10 }), async (c) => {
   const error = c.req.query('error')
   if (error) return c.redirect(`${config.frontendUrl}/signin?oauth=error=${error}`)
 
@@ -102,16 +99,15 @@ authRoutes.get('/github/callback', async (c) => {
   try {
     const result = await githubLogin(code, mode)
     setCookie(c, 'refreshToken', result.refreshToken, REFRESH_COOKIE)
-    const user = encodeURIComponent(JSON.stringify(result.user))
-    return c.redirect(`${config.frontendUrl}/#oauth=success&access_token=${result.accessToken}&user=${user}`)
+    return oauthSuccessRedirect(c, result)
   } catch (e) {
     console.error('GitHub OAuth failed:', e)
-    if (mode === 'signin') return c.redirect(`${config.frontendUrl}/signup?oauth=error=no_account`)
-    return c.redirect(`${config.frontendUrl}/signin?oauth=error=auth_failed`)
+    return oauthErrorRedirect(c, mode)
   }
 })
 
-authRoutes.post('/refresh', async (c) => {
+// Rotate the refresh token
+authRoutes.post('/refresh', rateLimit({ windowMs: 60 * 1000, max: 30 }), async (c) => {
   const refreshToken = getCookie(c, 'refreshToken')
   if (!refreshToken) return c.json({ error: 'No refresh token' }, 401)
 
@@ -120,9 +116,19 @@ authRoutes.post('/refresh', async (c) => {
     setCookie(c, 'refreshToken', result.refreshToken, REFRESH_COOKIE)
     return c.json({ accessToken: result.accessToken, user: result.user })
   } catch {
+    deleteCookie(c, 'refreshToken', REFRESH_COOKIE)
     return c.json({ error: 'Invalid refresh token' }, 401)
   }
 })
 
+function oauthSuccessRedirect(c: Context, result: AuthResponse) {
+  const user = encodeURIComponent(JSON.stringify(result.user))
+  return c.redirect(`${config.frontendUrl}/#oauth=success&access_token=${result.accessToken}&user=${user}`)
+}
 
-export default authRoutes;
+function oauthErrorRedirect(c: Context, mode: 'signup' | 'signin') {
+  const error = mode === 'signin' ? 'no_account' : 'auth_failed'
+  return c.redirect(`${config.frontendUrl}/signup?oauth=error=${error}`)
+}
+
+export default authRoutes

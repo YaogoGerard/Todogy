@@ -8,7 +8,7 @@
 
 ```mermaid
 graph LR
-    REQ["R: Guest can write todos"] -->|Implies| GUAR["G: localStorage persistence"]
+    REQ["R: Guest can write todos"] -->|Implies| GUAR["G: in-memory session storage"]
     GUAR -->|Assigned to| RESP["R: Frontend Storage"]
     RESP -->|Implemented by| COMP["Pinia Todos Store"]
 
@@ -23,8 +23,8 @@ graph LR
 
 | Requirement | Guarantee | Responsibility | Component | Module |
 |---|---|---|---|---|
-| Guest creates todo | Task captured in localStorage | Manage local CRUD + persistence | `useTodosStore` (`localStorage`) | Frontend Store |
-| Guest marks done | Task toggled in localStorage | Update local state + save | `useTodosStore` | Frontend Store |
+| Guest creates todo | Task captured in memory | Manage local CRUD | `useTodosStore` (in-memory) | Frontend Store |
+| Guest marks done | Task toggled in memory | Update local state | `useTodosStore` | Frontend Store |
 | User registers | Account created, tokens issued | Validate input, hash password, store user | `auth.service.ts` | `modules/auth` |
 | User logs in | Credentials verified | Compare bcrypt hash, generate JWTs | `auth.service.ts` | `modules/auth` |
 | User logs in via Google | OAuth handshake + profile creation | Validate OAuth code, create/find user | `auth.service.ts` (googleLogin) | `modules/auth` |
@@ -34,7 +34,7 @@ graph LR
 | User lists todos | Return only owned tasks | Query `Todo.find({ userId })` | `todos.service.ts` | `modules/todos` |
 | User creates todo | Task linked to userId | Create doc with `{ title, userId }` | `todos.service.ts` | `modules/todos` |
 | User deletes todo | Only owner can delete | `findOneAndDelete({ _id, userId })` | `todos.service.ts` | `modules/todos` |
-| Guest tasks merge on login | Local tasks pushed to backend | Read localStorage, POST each, then fetch | `useTodosStore` | Frontend Store |
+| Guest tasks merge on login | Local tasks pushed to backend | Read in-memory items, POST each in parallel, then fetch | `useTodosStore` | Frontend Store |
 
 ---
 
@@ -57,6 +57,8 @@ graph TD
         AuthMiddleware[JWT Middleware]
         AuthService[auth.service.ts]
         TodosService[todos.service.ts]
+        Validation["zod validation + HttpError + onError"]
+        RateLimit["rate-limit middleware"]
         UserModel[(User Model)]
         TodoModel[(Todo Model)]
     end
@@ -75,8 +77,11 @@ graph TD
     AxiosAPI -->|HTTP| TodosRoutes
     AuthRoutes --> AuthService
     AuthRoutes --> AuthMiddleware
+    AuthRoutes --> RateLimit
     TodosRoutes --> AuthMiddleware
     TodosRoutes --> TodosService
+    TodosRoutes --> Validation
+    AuthRoutes --> Validation
     AuthService --> UserModel
     TodosService --> TodoModel
     AuthService --> GoogleOAuth
@@ -95,5 +100,5 @@ graph TD
 | `modules/todos` | CRUD, ownership filtering | High — all task operations |
 | `modules/users` | User schema, DB model | High — single concern |
 | `shared/database` | MongoDB connection | High — single concern |
-| Frontend Store | State + localStorage persistence | Medium — state + persistence mixed |
-| Frontend API | HTTP layer + interceptor | High — all external communication |
+| Frontend Store | State + guest/auth dispatch | Medium — state + branching mixed |
+| Frontend API | HTTP layer + 401 refresh interceptor | High — all external communication |

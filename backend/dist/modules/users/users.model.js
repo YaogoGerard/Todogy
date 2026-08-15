@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 const userSchema = new mongoose.Schema({
-    email: { type: String, required: true, unique: true },
+    email: { type: String, required: true },
     name: { type: String, required: true },
     password: { type: String },
     refreshToken: { type: String },
@@ -8,4 +8,4 @@ const userSchema = new mongoose.Schema({
     googleId: { type: String, unique: true, sparse: true },
     githubId: { type: String, unique: true, sparse: true },
 }, { timestamps: true });
-export const User = mongoose.model("User", userSchema);
+export const User = mongoose.model('User', userSchema);
