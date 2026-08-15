@@ -1,6 +1,7 @@
 import { User } from '../users/users.model.js';
 import { sign, verify } from 'hono/jwt';
 import bcrypt from 'bcryptjs';
+import { randomUUID } from 'node:crypto';
 import { config } from '../../config/constants.js';
 import { Google, GitHub, decodeIdToken } from 'arctic';
 import { badRequest, conflict, unauthorized } from '../../shared/http-error.js';
@@ -90,7 +91,7 @@ export async function githubLogin(code, mode = 'signup') {
 async function generateTokens(user) {
     const payload = { userId: user._id.toString(), email: user.email };
     const accessToken = await sign({ ...payload, exp: Math.floor(Date.now() / 1000) + 60 * 15 }, config.jwtSecret);
-    const refreshToken = await sign({ ...payload, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7 }, config.jwtSecret);
+    const refreshToken = await sign({ ...payload, jti: randomUUID(), exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7 }, config.jwtSecret);
     await User.updateOne({ _id: user._id }, { refreshToken });
     return {
         accessToken,

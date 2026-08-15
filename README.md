@@ -60,14 +60,16 @@ npm run dev                # → http://localhost:5173
 
 ## Testing
 
-- **Unit / component tests** ([Vitest](https://vitest.dev)): `backend/tests/` and `frontend/tests/`.
-- **End-to-end tests** ([Playwright](https://playwright.dev), real Chromium): `frontend/e2e/` — covers the guest/unauthenticated experience (add/toggle/filter/remove todos, in-memory only, navigation) and sign-in transitions. The API is stubbed, so no backend or database is required.
+- **Backend unit tests** ([Vitest](https://vitest.dev)): `backend/tests/` — services and routes with mocked models.
+- **Backend end-to-end tests**: `backend/tests/e2e/` — the **real** Hono app + **real MongoDB** (`mongodb-memory-server`) + real bcrypt/JWT/cookies/rate-limiting: register/login, todo CRUD + per-user scoping, refresh-token rotation, logout revocation, rate limits, OAuth callback redirects.
+- **Frontend unit tests**: `frontend/tests/` — stores, components, views and utils.
+- **Frontend end-to-end tests** ([Playwright](https://playwright.dev), real Chromium): `frontend/e2e/` — the guest/unauthenticated experience and sign-in transitions. The API is stubbed, so no backend is required.
 
 ```bash
-cd backend && npm test                          # API unit + route integration tests
+cd backend && npm test                          # 43 unit + 18 real-DB E2E
 cd frontend && npm test                         # stores, components and views tests
 cd frontend && npx playwright install chromium  # once, to download the browser
-cd frontend && npm run test:e2e                 # end-to-end tests (builds + previews the app)
+cd frontend && npm run test:e2e                 # 18 browser end-to-end tests
 ```
 
 Tests and builds run as part of the [deploy pipeline](.github/workflows/deploy.yml) on every push to the `deploy` branch: the `test` job (including the Playwright suite) must pass before the backend (Render) and frontend (Firebase Hosting) deploy.

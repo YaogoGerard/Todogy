@@ -1,6 +1,7 @@
 import { User, type IUser } from '../users/users.model.js'
 import { sign, verify } from 'hono/jwt'
 import bcrypt from 'bcryptjs'
+import { randomUUID } from 'node:crypto'
 import type { RegisterInput, LoginInput, AuthResponse, TokenPayload, GitHubProfile, GoogleClaims } from './auth.model.js'
 import { config } from '../../config/constants.js'
 import { Google, GitHub, decodeIdToken } from 'arctic'
@@ -116,7 +117,7 @@ async function generateTokens(user: HydratedDocument<IUser>): Promise<AuthRespon
   )
 
   const refreshToken = await sign(
-    { ...payload, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7 },
+    { ...payload, jti: randomUUID(), exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7 },
     config.jwtSecret,
   )
 
