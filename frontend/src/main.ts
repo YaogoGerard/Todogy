@@ -4,6 +4,7 @@ import './style.css'
 import App from './App.vue'
 import router from './router'
 import { useAuthStore } from './stores/auth'
+import { signalAuthBooted } from './router'
 
 async function boot() {
   const start = Date.now()
@@ -31,6 +32,8 @@ async function boot() {
   } else {
     await authStore.init()
   }
+
+  signalAuthBooted()
 
   app.mount('#app')
 

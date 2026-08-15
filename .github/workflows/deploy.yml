@@ -44,8 +44,12 @@ jobs:
         env:
           BASE_URL: ${{ secrets.BASE_URL }}
 
-      - name: Frontend — tests
+      - name: Frontend — unit tests
         run: npm test
+        working-directory: frontend
+
+      - name: Frontend — E2E tests (Playwright)
+        run: npx playwright install --with-deps chromium && npm run test:e2e
         working-directory: frontend
 
   backend:

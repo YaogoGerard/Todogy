@@ -4,6 +4,15 @@ import SignInView from '../views/SignInView.vue'
 import SignUpView from '../views/SignUpView.vue'
 import { useAuthStore } from '../stores/auth'
 
+let bootResolve!: () => void
+const authBooted = new Promise<void>(resolve => {
+  bootResolve = resolve
+})
+
+export function signalAuthBooted() {
+  bootResolve()
+}
+
 const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -13,8 +22,9 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   if (to.name === 'signin' || to.name === 'signup') {
+    await authBooted
     const auth = useAuthStore()
     if (auth.isAuthenticated) return { name: 'todos' }
   }

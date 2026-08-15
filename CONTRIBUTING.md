@@ -20,7 +20,8 @@ npm test        # run the backend test suite (Vitest)
 # Frontend (new terminal)
 cd frontend
 npm run dev     # http://localhost:5173
-npm test        # run the frontend test suite (Vitest)
+npm test        # run the frontend unit test suite (Vitest)
+npm run test:e2e  # run the Playwright end-to-end suite (guests & sign-in)
 ```
 
 ## What to Work On
@@ -30,7 +31,7 @@ Check the [open issues](https://github.com/YaogoGerard/Todogy/issues) for a list
 ## Pull Request Guidelines
 
 - Keep PRs focused on a single concern
-- Update or add tests if applicable (`npm test` in `backend/` and `frontend/`)
+- Update or add tests if applicable (`npm test` in `backend/` and `frontend/`, `npm run test:e2e` for browser flows)
 - Update docs if you change behaviour
 - Make sure `npm run build` and `npm test` pass in `backend/` and `frontend/`
 - Write a clear commit message and PR description
