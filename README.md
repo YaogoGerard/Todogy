@@ -67,7 +67,7 @@ cd backend && npm test     # API unit tests + route integration tests (no DB nee
 cd frontend && npm test    # stores, components and views tests
 ```
 
-CI builds and tests both packages on every push/PR to `main` (see [.github/workflows/ci.yml](.github/workflows/ci.yml)), and the [deploy pipeline](.github/workflows/deploy.yml) only deploys once the test job is green.
+Tests and builds run as part of the [deploy pipeline](.github/workflows/deploy.yml) on every push to the `deploy` branch: the `test` job must pass before the backend (Render) and frontend (Firebase Hosting) deploy.
 
 ## Documentation
 
