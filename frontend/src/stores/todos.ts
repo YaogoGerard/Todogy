@@ -86,5 +86,10 @@ export const useTodosStore = defineStore('todos', () => {
     items.value = items.value.filter(t => t._id !== id)
   }
 
-  return { items, filter, loading, filteredItems, total, done, progress, fetchTodos, addTodo, toggleDone, remove }
+  function reset() {
+    items.value = []
+    filter.value = 'all'
+  }
+
+  return { items, filter, loading, filteredItems, total, done, progress, fetchTodos, addTodo, toggleDone, remove, reset }
 })

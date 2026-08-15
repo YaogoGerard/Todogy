@@ -113,4 +113,37 @@ test.describe('authenticated transitions', () => {
     await expect(page).toHaveURL('/')
     await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible()
   })
+
+  test('logging out clears the session and the visible todos immediately', async ({ page }) => {
+    await page.route('**/auth/login', route =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ accessToken: 'at', user: { id: 'u1', email: 'user@example.com', name: 'Tester' } }) }),
+    )
+    await page.route('**/auth/logout', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({}) }))
+    await page.route('**/todos', route => {
+      if (route.request().method() === 'GET') {
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify([{ _id: 't1', title: 'Server task', completed: false, userId: 'u1', createdAt: '2026-01-01T00:00:00.000Z' }]),
+        })
+      }
+      return route.continue()
+    })
+
+    await page.goto('/signin')
+    await page.getByLabel('Email').fill('user@example.com')
+    await page.getByLabel('Password').fill('password123')
+    await page.getByRole('button', { name: 'Sign in' }).click()
+
+    await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible()
+    await expect(page.getByText('Server task')).toBeVisible()
+
+    await page.getByRole('button', { name: 'Logout' }).click()
+
+    await expect(page).toHaveURL(/\/signin$/)
+    await page.goto('/')
+    await expect(page.getByText('Server task')).toHaveCount(0)
+    await expect(page.getByText(/Nothing here/)).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Login' })).toBeVisible()
+  })
 })

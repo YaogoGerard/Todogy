@@ -3,9 +3,11 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import logo from '../assets/logo.png'
 import { useAuthStore } from '../stores/auth'
+import { useTodosStore } from '../stores/todos'
 
 const router = useRouter()
 const auth = useAuthStore()
+const todos = useTodosStore()
 
 const githubUrl = import.meta.env.VITE_GITHUB_URL || 'https://github.com/YaogoGerard/Todogy'
 
@@ -22,8 +24,9 @@ const progress = computed(() => {
 const circumference = 88
 const offset = computed(() => circumference * (1 - progress.value))
 
-function handleLogout() {
-  auth.logout()
+async function handleLogout() {
+  await auth.logout()
+  todos.reset()
   router.push('/signin')
 }
 </script>

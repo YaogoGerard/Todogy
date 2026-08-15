@@ -123,4 +123,15 @@ describe('todos store — authenticated mode', () => {
     expect(MockApi.removeTodo).toHaveBeenCalledWith('s1')
     expect(store.items).toHaveLength(0)
   })
+
+  it('reset() clears the items and resets the filter', async () => {
+    const store = useTodosStore()
+    store.items.push(localTodo())
+    store.filter = 'done'
+
+    store.reset()
+
+    expect(store.items).toHaveLength(0)
+    expect(store.filter).toBe('all')
+  })
 })
